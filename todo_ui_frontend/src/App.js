@@ -1,47 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useMemo, useState } from "react";
+import "./App.css";
+import AppHeader from "./components/layout/AppHeader";
+import ThemeToggle from "./components/layout/ThemeToggle";
+import TodoForm from "./components/todos/TodoForm";
+import TodoList from "./components/todos/TodoList";
+import {
+  addTodo,
+  clearCompleted,
+  deleteTodo,
+  loadTodos,
+  toggleTodo,
+} from "./services/todoStorage";
+import { filterTodos, getStats } from "./utils/todo";
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * App entry point for the Todo UI.
+ *
+ * Responsibilities:
+ * - Manage app-level state (theme, todos, filter)
+ * - Persist theme to the document + persist todos to localStorage through service helpers
+ * - Compose reusable UI components
+ */
 function App() {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState("light");
+  const [todos, setTodos] = useState(() => loadTodos());
+  const [filter, setFilter] = useState("all"); // all | active | completed
 
-  // Effect to apply theme to document element
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
+  const visibleTodos = useMemo(() => filterTodos(todos, filter), [todos, filter]);
+  const stats = useMemo(() => getStats(todos), [todos]);
+
   // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
+  const handleAddTodo = (text) => setTodos((prev) => addTodo(prev, text));
+
+  // PUBLIC_INTERFACE
+  const handleToggleTodo = (id) => setTodos((prev) => toggleTodo(prev, id));
+
+  // PUBLIC_INTERFACE
+  const handleDeleteTodo = (id) => setTodos((prev) => deleteTodo(prev, id));
+
+  // PUBLIC_INTERFACE
+  const handleClearCompleted = () => setTodos((prev) => clearCompleted(prev));
 
   return (
     <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <div className="app-shell">
+        <ThemeToggle
+          theme={theme}
+          onToggle={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
+        />
+
+        <main className="panel" aria-label="Todo application">
+          <AppHeader
+            title="Retro Todo"
+            subtitle="Local, fast, and simple."
+            stats={stats}
+            filter={filter}
+            onChangeFilter={setFilter}
+            onClearCompleted={handleClearCompleted}
+          />
+
+          <TodoForm onAdd={handleAddTodo} />
+
+          <TodoList
+            todos={visibleTodos}
+            emptyText={
+              filter === "completed"
+                ? "No completed todos yet."
+                : filter === "active"
+                  ? "No active todos. Nice."
+                  : "No todos yet. Add one above."
+            }
+            onToggle={handleToggleTodo}
+            onDelete={handleDeleteTodo}
+          />
+        </main>
+      </div>
     </div>
   );
 }
