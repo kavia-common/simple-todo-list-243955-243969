@@ -19,14 +19,16 @@ export default function TodoForm({ onAdd }) {
     <form className="todo-form" onSubmit={submit} aria-label="Add a todo">
       <input
         className="input"
+        name="todoText"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Type a task and press Enter…"
+        placeholder="Enter a todo…"
         aria-label="Todo text"
         maxLength={140}
+        autoFocus
       />
       <button className="btn" type="submit" disabled={!text.trim()}>
-        Add
+        Add Todo
       </button>
     </form>
   );
