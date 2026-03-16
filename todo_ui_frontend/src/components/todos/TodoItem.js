@@ -17,7 +17,12 @@ export default function TodoItem({ todo, onToggle, onDelete }) {
         <span className="item-text">{todo.text}</span>
       </label>
 
-      <button type="button" className="btn btn-danger" onClick={onDelete}>
+      <button
+        type="button"
+        className="btn btn-danger"
+        onClick={onDelete}
+        aria-label={`Delete "${todo.text}"`}
+      >
         Delete
       </button>
     </li>
